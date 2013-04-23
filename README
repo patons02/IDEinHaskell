@@ -1,0 +1,15 @@
+For the text editor files I have renamed Prac1.hs to TextCursorKeys.hs as this file handles the cursor and key movements.
+I have renamed Main.hs to TextEditor.hs. This file contains the main function.
+
+
+Notes:
+
+
+Deadline: Friday 17th May
+
+Project: Develop an integrated development environment for a FOUL like programming language
+
+Basic deliverable:
+      Parse the code, print out result.
+      Make it pretty.
+
