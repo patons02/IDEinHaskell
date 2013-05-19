@@ -8,7 +8,7 @@ The blog describing certain parts of this is located at http://functionalramblin
 To run, just download all the files and run 
 > make
 
-> ./textEditor <fileName>
+> ./textEditor *fileName*
  
  
 Must have gtk2hs package installed with cabal.
