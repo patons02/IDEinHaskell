@@ -30,7 +30,9 @@ import FOULParser
 data Window = Window
 type WindowPtr = Ptr Window
 
-
+{----------------------------------------------
+            Foreign imports 
+-----------------------------------------------}
 foreign import ccall
   initscr :: IO () 
 
@@ -133,7 +135,7 @@ outer ps tc = inner ps tc (whatAndWhere tc) LotsChanged
     mc <- keyReady
     case mc of
       Nothing -> inner ps' tc lc NoChange
-      Just Quit -> do        
+      Just Quit ->  do        
         endwin
         promptSave tc
         promptComp tc
@@ -141,45 +143,51 @@ outer ps tc = inner ps tc (whatAndWhere tc) LotsChanged
         Nothing -> inner ps' tc lc NoChange
         Just (d, tc') -> inner ps' tc' (whatAndWhere tc') d
 
-promptComp tc = do
-  putStrLn "Would you like to compile a FOUL script now? (Y/n)"
-  c <- getChar
-  putStrLn " "
-  case (toUpper c) of
-    'Y' -> do
-      comp tc
-    _ -> return ()
-  
-promptSave tc = do
-  putStrLn "Would you like to save the file? (Y/n)"
-  c <- getChar
-  putStrLn " "
-  case (toUpper c) of
-     'Y' -> do
-       putStrLn "Would you like this file to be saved in the current directory."
-       c' <- getChar
-       case (toUpper c') of
-         'Y' -> do
-           putStrLn "Please enter the file name to save to:"
-           fNme <- getLine
-           saveFile fNme tc True
-         'N' -> do
-           putStrLn "Please enter the full path of the file to be saved:"
-           pNme <- getLine     
-           saveFile pNme tc False
-         _ -> return ()
-     _ -> return ()
-
+{-
+Loads a file into the IDE
+inputs: path or file name
+-}
 loadFile ::[FilePath] -> IO ()
 loadFile xs = do
   s <- case xs of
     [] -> return ""
-    (x : _) -> readFile x
+    (x : _) -> case isSupportedFileType [x] of
+                   True -> readFile x
+                   False -> do 
+                     unsupportedPromptLd
+                     return " "
   let (l, ls) = case lines s of
         [] -> ("", [])
         (l : ls) -> (l, ls)
   initscr
   outer ((0, 0), (-1, -1)) (B0, (B0, Here, l), ls)
+
+unsupportedPromptLd :: IO ()
+unsupportedPromptLd = do
+  putStrLn "You have tried to load an unsupported file type."
+  putStrLn "Would you like to load another file? (Y/n)"
+  c <- getChar
+  putStrLn " "
+  case (toUpper c) of
+    'Y' -> do
+      putStrLn "Please type in the full path of the file."
+      line <- getLine
+      loadFile [line]
+    'N' -> do
+      return ()
+
+checkMode :: [FilePath] -> IO ()
+checkMode xs = do
+  putStrLn "Select your mode:"
+  putStrLn "Press 1 for command line editor, and 2 for GUI Editor."
+  c <- getChar
+  putStrLn " "
+  case c of
+    '1' -> loadFile xs
+    '2' -> runGUI xs
+    otherwise -> do
+      putStrLn "Please select 1 or 2."
+      checkMode xs
 
 --This is the main file called in Main.hs
 textEditor :: IO ()
@@ -187,5 +195,5 @@ textEditor = do
   hSetBuffering stdout NoBuffering
   hSetBuffering stdin NoBuffering
   xs <- getArgs
-  loadFile xs
+  checkMode xs
 
